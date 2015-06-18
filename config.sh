@@ -46,6 +46,8 @@ if [[ ! -f /config/bin/run.conf ]]; then
   rm -rf /config/bin
 fi
 _link /config/bin /usr/local/crashplan/bin
+# move desktop script out of container
+_link /config/bin/CrashPlanDesktop /startapp.sh
 
 chown -R nobody:users /config
 chmod -R 777 /config
