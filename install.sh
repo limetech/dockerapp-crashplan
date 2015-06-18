@@ -55,9 +55,8 @@ fi
 cp scripts/run.conf ${TARGETDIR}/bin
 
 # Add desktop startup script
-cp scripts/CrashPlanDesktop  ${TARGETDIR}/bin/
-sed -i 's|"\$SCRIPTDIR/.."|\$(dirname $SCRIPTDIR)|g' ${TARGETDIR}/bin/CrashPlanDesktop
-ln -s ${TARGETDIR}/bin/CrashPlanDesktop /startapp.sh
+cp scripts/CrashPlanDesktop  /startapp.sh
+sed -i 's|"\$SCRIPTDIR/.."|\$(dirname $SCRIPTDIR)|g' /startapp.sh
 
 # Fix permissions
 chmod -R u-x,go-rwx,go+u,ugo+X ${TARGETDIR}
