@@ -7,7 +7,7 @@ MAINTAINER Lime Technology <erics@lime-technology.com>
 #########################################
 
 # Set correct environment variables
-ENV APP_NAME="CrashPlanDesktop" WIDTH=900 HEIGHT=600
+ENV APP_NAME="CrashPlanDesktop" WIDTH=1000 HEIGHT=650
 
 # Use baseimage-docker's init system
 CMD ["/sbin/my_init"]

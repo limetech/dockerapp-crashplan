@@ -9,7 +9,7 @@ APP_BASENAME=CrashPlan
 DIR_BASENAME=crashplan
 TARGETDIR=/usr/local/crashplan
 BINSDIR=/usr/local/bin
-MANIFESTDIR=/data
+MANIFESTDIR=/backups
 INITDIR=/etc/init.d
 RUNLEVEL=`who -r | sed -e 's/^.*\(run-level [0-9]\).*$/\1/' | cut -d \  -f 2`
 RUNLVLDIR=/etc/rc${RUNLEVEL}.d
@@ -49,6 +49,11 @@ if grep "<manifestPath>.*</manifestPath>" ${TARGETDIR}/conf/default.service.xml 
 	sed -i "s|<manifestPath>.*</manifestPath>|<manifestPath>${MANIFESTDIR}</manifestPath>|g" ${TARGETDIR}/conf/default.service.xml
 else
 	sed -i "s|<backupConfig>|<backupConfig>\n\t\t\t<manifestPath>${MANIFESTDIR}</manifestPath>|g" ${TARGETDIR}/conf/default.service.xml
+fi
+
+# Remove the default backup set
+if grep "<backupSets>.*</backupSets>" ${TARGETDIR}/conf/default.service.xml > /dev/null; then
+    sed -i "s|<backupSets>.*</backupSets>|<backupSets></backupSets>|g" ${TARGETDIR}/conf/default.service.xml
 fi
 
 # Install the control script for the service
