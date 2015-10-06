@@ -16,7 +16,7 @@ RUNLVLDIR=/etc/rc${RUNLEVEL}.d
 JAVACOMMON=`which java`
 
 # Downloading Crashplan
-wget -nv http://download.code42.com/installs/linux/install/CrashPlan/CrashPlan_4.3.0_Linux.tgz -O - | tar -zx -C /tmp
+wget -nv http://download.code42.com/installs/linux/install/CrashPlan/CrashPlan_4.4.1_Linux.tgz -O - | tar -zx -C /tmp
 
 # Installation directory
 cd /tmp/CrashPlan-install
