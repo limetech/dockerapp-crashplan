@@ -68,8 +68,13 @@ chmod -R u-x,go-rwx,go+u,ugo+X ${TARGETDIR}
 chown -R nobody ${TARGETDIR} /var/lib/crashplan
 
 # Disable auto update
-chmod -R -x ${TARGETDIR}/upgrade/*
+cat <<'EOT' > ${TARGETDIR}/upgrade/startLinux.sh
+#!/bin/sh
 
+# in-app updates are disabled
+EOT
+
+# Guacamole config
 cat <<'EOT' > /etc/guacamole/noauth-config.xml
 <configs>
     <config name="GUI_APPLICATION" protocol="rdp">
