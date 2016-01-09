@@ -7,20 +7,17 @@
 # Install Crashplan
 APP_BASENAME=CrashPlan
 DIR_BASENAME=crashplan
+TEMPDIR=/tmp/crashplan-install
 TARGETDIR=/usr/local/crashplan
 BINSDIR=/usr/local/bin
 MANIFESTDIR=/backups
 INITDIR=/etc/init.d
-RUNLEVEL=`who -r | sed -e 's/^.*\(run-level [0-9]\).*$/\1/' | cut -d \  -f 2`
+RUNLEVEL=$(who -r | sed -e 's/^.*\(run-level [0-9]\).*$/\1/' | cut -d \  -f 2)
 RUNLVLDIR=/etc/rc${RUNLEVEL}.d
-JAVACOMMON=`which java`
+JAVACOMMON=$(which java)
 
 # Downloading Crashplan
 wget -nv http://download.code42.com/installs/linux/install/CrashPlan/CrashPlan_4.5.0_Linux.tgz -O - | tar -zx -C /tmp
-
-# Installation directory
-cd /tmp/crashplan-install
-INSTALL_DIR=`pwd`
 
 # Make the destination dirs
 mkdir -p ${TARGETDIR}
@@ -33,16 +30,13 @@ echo "BINSDIR=${BINSDIR}" >> ${TARGETDIR}/install.vars
 echo "MANIFESTDIR=${MANIFESTDIR}" >> ${TARGETDIR}/install.vars
 echo "INITDIR=${INITDIR}" >> ${TARGETDIR}/install.vars
 echo "RUNLVLDIR=${RUNLVLDIR}" >> ${TARGETDIR}/install.vars
-NOW=`date +%Y%m%d`
-echo "INSTALLDATE=$NOW" >> ${TARGETDIR}/install.vars
-cat ${INSTALL_DIR}/install.defaults >> ${TARGETDIR}/install.vars
+echo "INSTALLDATE=$(date +%Y%m%d)" >> ${TARGETDIR}/install.vars
+cat ${TEMPDIR}/install.defaults >> ${TARGETDIR}/install.vars
 echo "JAVACOMMON=${JAVACOMMON}" >> ${TARGETDIR}/install.vars
 
-# Definition of ARCHIVE occurred above when we extracted the JAR we need to evaluate Java environment
-ARCHIVE=`ls ./*_*.cpi`
+# Extract CrashPlan installer files
 cd ${TARGETDIR}
-cat "${INSTALL_DIR}/${ARCHIVE}" | gzip -d -c - | cpio -i --no-preserve-owner
-cd ${INSTALL_DIR}
+cat $(ls ${TEMPDIR}/*_*.cpi) | gzip -d -c - | cpio -i --no-preserve-owner
 
 # Update the configs for file storage
 if grep "<manifestPath>.*</manifestPath>" ${TARGETDIR}/conf/default.service.xml > /dev/null; then
@@ -57,10 +51,10 @@ if grep "<backupSets>.*</backupSets>" ${TARGETDIR}/conf/default.service.xml > /d
 fi
 
 # Install the control script for the service
-cp scripts/run.conf ${TARGETDIR}/bin
+cp ${TEMPDIR}/scripts/run.conf ${TARGETDIR}/bin
 
 # Add desktop startup script
-cp scripts/CrashPlanDesktop  /startapp.sh
+cp ${TEMPDIR}/scripts/CrashPlanDesktop /startapp.sh
 sed -i 's|"\$SCRIPTDIR/.."|\$(dirname $SCRIPTDIR)|g' /startapp.sh
 
 # Fix permissions
@@ -80,7 +74,9 @@ cat <<'EOT' > /etc/service/Xvnc/run
 exec 2>&1
 WD=${WIDTH:-1280}
 HT=${HEIGHT:-720}
-rm -f /tmp/.X1-lock &>/dev/null
+
+exec rm -f /tmp/.X1-lock &>/dev/null
+
 exec /sbin/setuser nobody Xvnc4 :1 -geometry ${WD}x${HT} -depth 16 -rfbwait 30000 -SecurityTypes None -rfbport 5901 -bs -ac \
                    -pn -fp /usr/share/fonts/X11/misc/,/usr/share/fonts/X11/75dpi/,/usr/share/fonts/X11/100dpi/ \
                    -co /etc/X11/rgb -dpi 96
@@ -104,4 +100,4 @@ EOT
 #########################################
 
 # Remove install data
-rm -rf ${INSTALL_DIR}
+rm -rf ${TEMPDIR}
