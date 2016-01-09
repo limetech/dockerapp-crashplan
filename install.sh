@@ -75,7 +75,7 @@ exec 2>&1
 WD=${WIDTH:-1280}
 HT=${HEIGHT:-720}
 
-exec rm -f /tmp/.X1-lock &>/dev/null
+rm -f /tmp/.X1-lock &>/dev/null
 
 exec /sbin/setuser nobody Xvnc4 :1 -geometry ${WD}x${HT} -depth 16 -rfbwait 30000 -SecurityTypes None -rfbport 5901 -bs -ac \
                    -pn -fp /usr/share/fonts/X11/misc/,/usr/share/fonts/X11/75dpi/,/usr/share/fonts/X11/100dpi/ \
