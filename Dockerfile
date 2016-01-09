@@ -28,7 +28,7 @@ COPY crashplan.sh /etc/service/crashplan/run
 
 # Install steps for X app
 COPY install.sh /tmp/
-RUN chmod +x /tmp/install.sh && /tmp/install.sh && rm /tmp/install.sh
+RUN chmod +x /tmp/install.sh; sync && /tmp/install.sh && rm /tmp/install.sh
 
 #########################################
 ##         EXPORTS AND VOLUMES         ##
