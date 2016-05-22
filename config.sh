@@ -46,6 +46,8 @@ if [[ ! -f /config/bin/run.conf ]]; then
   rm -rf /config/bin
 fi
 _link /config/bin /usr/local/crashplan/bin
+# remove old desktop script since Crashplan updater might have overwritten it with a stock version
+rm -rf /usr/local/crashplan/bin/CrashPlanDesktop
 # move desktop script out of container
 _link /usr/local/crashplan/bin/CrashPlanDesktop /startapp.sh
 
