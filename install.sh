@@ -4,6 +4,41 @@
 ##             INSTALLATION            ##
 #########################################
 
+# Upgrade Java
+cat <<'EOT' > /etc/apt/sources.list
+deb http://archive.ubuntu.com/ubuntu/ trusty main restricted
+deb-src http://archive.ubuntu.com/ubuntu/ trusty main restricted
+deb http://archive.ubuntu.com/ubuntu/ trusty-updates main restricted
+deb-src http://archive.ubuntu.com/ubuntu/ trusty-updates main restricted
+EOT
+add-apt-repository -y -r ppa:no1wantdthisname/openjdk-fontfix
+add-apt-repository -y ppa:webupd8team/java
+apt-get update -qq
+echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | /usr/bin/debconf-set-selections
+apt-get install -y --force-yes oracle-java8-installer
+apt-get install -y --force-yes oracle-java8-set-default
+apt-get autoremove -y
+apt-get clean -y
+rm -rf /var/lib/apt/lists/* /var/cache/* /var/tmp/*
+
+cat <<'EOT' > /etc/service/tomcat7/run
+#!/bin/bash
+exec 2>&1
+
+mkdir -p /var/cache/tomcat7/Catalina/localhost/guacamole
+touch /var/lib/tomcat7/logs/catalina.out
+
+cd /var/lib/tomcat7
+exec java -Djava.util.logging.config.file=/var/lib/tomcat7/conf/logging.properties \
+          -Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager \
+          -Djava.awt.headless=true -Xmx128m -XX:+UseConcMarkSweepGC \
+          -Djava.endorsed.dirs=/usr/share/tomcat7/endorsed \
+          -classpath /usr/share/tomcat7/bin/bootstrap.jar:/usr/share/tomcat7/bin/tomcat-juli.jar \
+          -Dcatalina.base=/var/lib/tomcat7 -Dcatalina.home=/usr/share/tomcat7 \
+          -Djava.io.tmpdir=/tmp/tomcat7-tomcat7-tmp org.apache.catalina.startup.Bootstrap start
+EOT
+
+
 # Install Crashplan
 APP_BASENAME=CrashPlan
 DIR_BASENAME=crashplan
@@ -55,6 +90,7 @@ cp ${TEMPDIR}/scripts/run.conf ${TARGETDIR}/bin
 
 # Add desktop startup script
 cp ${TEMPDIR}/scripts/CrashPlanDesktop /startapp.sh
+sed -i 's|\$(ls -l \$0 \| awk '"'"'{ print \$NF }'"'"')|"/usr/local/crashplan/bin/CrashPlanDesktop"|g' /startapp.sh
 sed -i 's|"\$SCRIPTDIR/.."|\$(dirname $SCRIPTDIR)|g' /startapp.sh
 
 # Fix permissions
