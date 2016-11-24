@@ -32,10 +32,60 @@ echo "INITDIR=${INITDIR}" >> ${TARGETDIR}/install.vars
 echo "RUNLVLDIR=${RUNLVLDIR}" >> ${TARGETDIR}/install.vars
 echo "INSTALLDATE=$(date +%Y%m%d)" >> ${TARGETDIR}/install.vars
 cat ${TEMPDIR}/install.defaults >> ${TARGETDIR}/install.vars
-echo "JAVACOMMON=${JAVACOMMON}" >> ${TARGETDIR}/install.vars
+echo "JAVACOMMON=${TARGETDIR}/jre/bin/java" >> ${TARGETDIR}/install.vars
+
+cd ${TARGETDIR}
+
+#download java
+if [[ $JAVACOMMON == "DOWNLOAD" ]]; then
+	if [[ $PARCH == "x86_64" ]]; then
+		JVMURL="http://download.code42.com/installs/proserver/jre/jre-linux-x64-1.8.0_72.tgz"
+	else
+		JVMURL="http://download.code42.com/installs/proserver/jre/jre-linux-i586-1.8.0_72.tgz"
+	fi
+	JVMFILE=`basename ${JVMURL}`
+	if [[ -f ${JVMFILE} ]]; then
+		echo ""
+		echo "Download of the JVM found. We'll try to use it, but if it's only a partial"
+		echo "copy of the file then this will fail. If that happens please remove the file"
+		echo "and try again."
+		echo "JRE Archive: ${JVMFILE}"
+		echo ""
+	else
+	
+	    # Start by looking for wget
+	    WGET_PATH=`which wget 2> /dev/null`
+	    if [[ $? == 0 ]]; then
+			echo "    downloading the JRE using wget"
+			$WGET_PATH $JVMURL
+			if [[ $? != 0 ]]; then
+				echo "Unable to download JRE; please check network connection"
+				exit 1
+			fi
+	    else
+
+			CURL_PATH=`which curl 2> /dev/null`
+			if [[ $? == 0 ]]; then
+		    	echo "    downloading the JRE using curl"
+		    	$CURL_PATH -L $JVMURL -o `basename $JVMURL`
+				if [[ $? != 0 ]]; then
+					echo "Unable to download JRE; please check network connection"
+					exit 1
+				fi
+			else
+		    	echo "Could not find wget or curl.  You must install one of these utilities"
+		    	echo "in order to download a JVM"
+		    	exit 1
+			fi
+	    fi
+	fi
+	
+	# Extract into ./jre
+	tar -xozf "${JVMFILE}"
+	echo "Java Installed."
+fi
 
 # Extract CrashPlan installer files
-cd ${TARGETDIR}
 cat $(ls ${TEMPDIR}/*_*.cpi) | gzip -d -c - | cpio -i --no-preserve-owner
 
 # Update the configs for file storage
