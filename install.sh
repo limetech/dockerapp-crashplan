@@ -39,6 +39,39 @@ cd ${TARGETDIR}
 # keep track of the processor architecture
 PARCH=`uname -m`
 
+# Extract CrashPlan installer files
+cat $(ls ${TEMPDIR}/*_*.cpi) | gzip -d -c - | cpio -i --no-preserve-owner
+
+# Update the configs for file storage
+if grep "<manifestPath>.*</manifestPath>" ${TARGETDIR}/conf/default.service.xml > /dev/null; then
+	sed -i "s|<manifestPath>.*</manifestPath>|<manifestPath>${MANIFESTDIR}</manifestPath>|g" ${TARGETDIR}/conf/default.service.xml
+else
+	sed -i "s|<backupConfig>|<backupConfig>\n\t\t\t<manifestPath>${MANIFESTDIR}</manifestPath>|g" ${TARGETDIR}/conf/default.service.xml
+fi
+
+# Remove the default backup set
+if grep "<backupSets>.*</backupSets>" ${TARGETDIR}/conf/default.service.xml > /dev/null; then
+    sed -i "s|<backupSets>.*</backupSets>|<backupSets></backupSets>|g" ${TARGETDIR}/conf/default.service.xml
+fi
+
+# Install the control script for the service
+cp ${TEMPDIR}/scripts/run.conf ${TARGETDIR}/bin
+
+# Add desktop startup script
+cp ${TEMPDIR}/scripts/CrashPlanDesktop /startapp.sh
+sed -i 's|"\$SCRIPTDIR/.."|\$(dirname $SCRIPTDIR)|g' /startapp.sh
+
+# Fix permissions
+chmod -R u-x,go-rwx,go+u,ugo+X ${TARGETDIR}
+chown -R nobody ${TARGETDIR} /var/lib/crashplan
+
+# Disable auto update
+cat <<'EOT' > ${TARGETDIR}/upgrade/startLinux.sh
+#!/bin/sh
+
+# in-app updates are disabled
+EOT
+
 #download java
 if [[ $PARCH == "x86_64" ]]; then
 	JVMURL="http://download.code42.com/installs/proserver/jre/jre-linux-x64-1.8.0_72.tgz"
@@ -86,39 +119,6 @@ fi
 tar -xozf "${JVMFILE}"
 rm "${JVMFILE}"
 echo "Java Installed."
-
-# Extract CrashPlan installer files
-cat $(ls ${TEMPDIR}/*_*.cpi) | gzip -d -c - | cpio -i --no-preserve-owner
-
-# Update the configs for file storage
-if grep "<manifestPath>.*</manifestPath>" ${TARGETDIR}/conf/default.service.xml > /dev/null; then
-	sed -i "s|<manifestPath>.*</manifestPath>|<manifestPath>${MANIFESTDIR}</manifestPath>|g" ${TARGETDIR}/conf/default.service.xml
-else
-	sed -i "s|<backupConfig>|<backupConfig>\n\t\t\t<manifestPath>${MANIFESTDIR}</manifestPath>|g" ${TARGETDIR}/conf/default.service.xml
-fi
-
-# Remove the default backup set
-if grep "<backupSets>.*</backupSets>" ${TARGETDIR}/conf/default.service.xml > /dev/null; then
-    sed -i "s|<backupSets>.*</backupSets>|<backupSets></backupSets>|g" ${TARGETDIR}/conf/default.service.xml
-fi
-
-# Install the control script for the service
-cp ${TEMPDIR}/scripts/run.conf ${TARGETDIR}/bin
-
-# Add desktop startup script
-cp ${TEMPDIR}/scripts/CrashPlanDesktop /startapp.sh
-sed -i 's|"\$SCRIPTDIR/.."|\$(dirname $SCRIPTDIR)|g' /startapp.sh
-
-# Fix permissions
-chmod -R u-x,go-rwx,go+u,ugo+X ${TARGETDIR}
-chown -R nobody ${TARGETDIR} /var/lib/crashplan
-
-# Disable auto update
-cat <<'EOT' > ${TARGETDIR}/upgrade/startLinux.sh
-#!/bin/sh
-
-# in-app updates are disabled
-EOT
 
 # Updated Xvnc config (remove existing lock file)
 cat <<'EOT' > /etc/service/Xvnc/run
